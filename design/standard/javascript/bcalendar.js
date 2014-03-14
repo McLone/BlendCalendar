@@ -20,41 +20,33 @@
 					case 'WEEK':
 						$('.bc-block-weekly', block).show();
 						$('.bc-element-range', block).show();
-						$('.bc-repeat-type', block).html(' week(s)');
+						$('.bc-repeat-type', block).html(' '+blendCalendarWeekString);
 					break;
 					case 'MONTH':
 						$('.bc-block-monthly', block).show();
 						$('.bc-element-range', block).show();
-						$('.bc-repeat-type', block).html(' month(s)');
+						$('.bc-repeat-type', block).html(' '+blendCalendarMonthString);
 					break;
 					case 'YEAR':
 						$('.bc-block-yearly', block).show();
 						$('.bc-element-range', block).show();
-						$('.bc-repeat-type', block).html(' year(s)');						
+						$('.bc-repeat-type', block).html(' '+blendCalendarYearString);
 					break;
 				
-				}				
+				}
+			}).triggerHandler( 'change' );
+			$('.bc-rangeendtype-null, .bc-rangeendtype-date', block).click(function(event) {
+				if( $(event.currentTarget).hasClass('bc-rangeendtype-null') )
+				{
+					$('.bc-rangeend-date', block ).attr('disabled', 'disabled');
+				}
+				else
+				{
+					$('.bc-rangeend-date', block ).removeAttr('disabled');
+				}
 			});
-			
-			/*
-			$('.bc-rangeendtype-date', block).click(function (){
-				$('.bc-rangeend-date', block).attr('disabled','');
-			});
-		
-			$('.bc-rangeendtype-null', block).click(function (){
-				$('.bc-rangeend-date', block).attr('disabled','disabled');
-			});
-		
-			$('.bc-rangeend-date', block).click(function (){
-				var selector = $('.bc-rangeendtype-date', block)[0];
-				
-				if (selector.checked) {
-					$('.bc-rangeend-date',block).attr('disabled','');    
-				}			
-			});
-			*/
-			
-			
+			$('.bc-rangeendtype-null:checked, .bc-rangeendtype-date:checked', block).triggerHandler('click');
+
 		});
 		
 		

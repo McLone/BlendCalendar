@@ -358,16 +358,14 @@ class CalendarEvent
         
         if($display)
         {
-        
-            $tz = date_default_timezone_get();
-            date_default_timezone_set('UTC');
+            $locale = eZLocale::instance();
+            $hourFormat = eZLocale::transformToPHPFormat( $locale->ShortTimeFormat, array( 'g', 'i', 'a', 'H', 'h' ) );
             $fields['contentobject_id']=$this->contentObjectId;
             $fields['object']=$this->contentObject;
-            $fields['start_time_local']=date('g:ia',$this->startTime);
-            $fields['end_time_local']=date('g:ia',$this->startTime + $this->duration);
+            $fields['start_time_local']=date($hourFormat,$this->startTime);
+            $fields['end_time_local']=date($hourFormat,$this->startTime + $this->duration);
             $fields['all_day']=$this->startTime ? false : true;
-            date_default_timezone_set($tz);
-            
+
         }
         
         return $fields;        

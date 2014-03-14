@@ -149,8 +149,6 @@ foreach($objects as $object)
     
     if(!$timeParams['all_day'])
     {
-        $tz = date_default_timezone_get();
-        date_default_timezone_set('UTC');    
         /*
         if($timeParams['from_time'] == '02:00 am' && $timeParams['to_time'] == '02:00 am' )
         {
@@ -183,8 +181,6 @@ foreach($objects as $object)
             
             $duration = $endTime - $startTime;
         }
-        
-        date_default_timezone_set($tz);
         
     }
     else

@@ -99,16 +99,31 @@ class BlendCalendarType extends eZDataType
         $allDay = $http->postVariable($base . '_allday_' . $id);
 
         $interval = $http->postVariable($base . '_interval_' . $id);
-        
 
-        
+
+        $locale = eZLocale::instance();
+        //This section try to detect if we have an "european date style" (d/m/y) as locale and then replace separator
+        //character to . so strtotime later know what to do.
+        if ( preg_match( '#%d.%m.%Y#', $locale->ShortDateFormat ) ) //European Style
+        {
+            $singleDate = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $singleDate );
+            $rangeStart = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $rangeStart );
+            $rangeEnd = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $rangeEnd );
+        }
+        else //Assuming "American style" (m/d/y)
+        {
+            $singleDate = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $singleDate );
+            $rangeStart = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $rangeStart );
+            $rangeEnd = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $rangeEnd );
+        }
+
         switch($recurType)
         {
             case 'ONCE':
                 if(!strtotime($singleDate))
                 {
-                    $contentObjectAttribute->setValidationError( ezi18n( 'kernel/classes/datatypes',
-                                                                         "Please enter a valid occurrence date." ) );
+                    $contentObjectAttribute->setValidationError( ezpI18n::tr( 'kernel/classes/datatypes',
+                                                                              "Please enter a valid occurrence date." ) );
         
                     return eZInputValidator::STATE_INVALID;        
                 }            
@@ -116,8 +131,8 @@ class BlendCalendarType extends eZDataType
             case 'WEEK':
                 if(!$weekdays)
                 {
-                    $contentObjectAttribute->setValidationError( ezi18n( 'kernel/classes/datatypes',
-                                                                         "Please select at least one day of the week." ) );
+                    $contentObjectAttribute->setValidationError( ezpI18n::tr( 'kernel/classes/datatypes',
+                                                                              "Please select at least one day of the week." ) );
         
                     return eZInputValidator::STATE_INVALID;        
                 
@@ -133,8 +148,8 @@ class BlendCalendarType extends eZDataType
             
             if($fromTimestamp > $toTimestamp && $rangeEndType != 'NULL')
             {
-                $contentObjectAttribute->setValidationError( ezi18n( 'kernel/classes/datatypes',
-                                                                     "The End Date must be before the Start Date." ) );
+                $contentObjectAttribute->setValidationError( ezpI18n::tr( 'kernel/classes/datatypes',
+                                                                          "The End Date must be before the Start Date." ) );
     
                 return eZInputValidator::STATE_INVALID;        
             }
@@ -187,9 +202,6 @@ class BlendCalendarType extends eZDataType
         
         if(!$allDay)
         {
-            $tz = date_default_timezone_get();
-            date_default_timezone_set('UTC');    
-        
             $startTime = strtotime($timeStart);
             
             //Convert to seconds since midnight
@@ -208,9 +220,6 @@ class BlendCalendarType extends eZDataType
                 
                 $duration = $endTime - $startTime;
             }
-            
-            date_default_timezone_set($tz);
-            
         }
         
         if($recurType == 'MONTH')
@@ -225,6 +234,28 @@ class BlendCalendarType extends eZDataType
         
         $recur = null;
         //echo "<pre>"; var_dump($recurType); echo "</pre>";
+
+        $locale = eZLocale::instance();
+        //This section try to detect if we have an "european date style" (d/m/y) as locale and then replace separator
+        //character to . so strtotime later know what to do.
+        if ( preg_match( '#%d.%m.%Y#', $locale->ShortDateFormat ) ) //European Style
+        {
+            $singleDate = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $singleDate );
+            $rangeStart = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $rangeStart );
+            $rangeEnd = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1.$2.$3', $rangeEnd );
+        }
+        else //Assuming "American style" (m/d/y)
+        {
+            $singleDate = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $singleDate );
+            $rangeStart = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $rangeStart );
+            $rangeEnd = preg_replace( '/([0-9]+).([0-9]+).([0-9]+)/', '$1/$2/$3', $rangeEnd );
+        }
+
+        if ( $rangeEndType == 'NULL' )
+        {
+            $rangeEnd = null;
+        }
+
         switch ($recurType)
         {
             case 'ONCE':

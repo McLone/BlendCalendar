@@ -18,7 +18,7 @@ class CalendarSingleOccurrence extends CalendarRecurrence
 
         $this->singleDate = mktime(0,0,0,$this->month, $this->day, $this->year);
         $this->rangeStart = $this->singleDate;
-        $this->rangeEnd = $this->singleDate + self::DAY;
+        $this->rangeEnd = null;
         
     }
     
@@ -37,7 +37,9 @@ class CalendarSingleOccurrence extends CalendarRecurrence
         
         if($display)
         {
-            $fields['singledate']=date('n/d/Y',$this->singleDate);    
+            $locale = eZLocale::instance();
+            $dateFormat = eZLocale::transformToPHPFormat( $locale->ShortDateFormat, array( 'n', 'd', 'Y', 'y', 'm', 'j' ) );
+            $fields['singledate']=date($dateFormat, $this->singleDate);
         }
         
         return $fields;

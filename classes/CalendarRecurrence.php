@@ -110,7 +110,7 @@ abstract class CalendarRecurrence
         
         if(!is_numeric($rangeEnd))
         {
-            $rangeEnd = strtotime($rangeEnd);
+            $rangeEnd = null;
         }
         
         $this->rangeStart = $rangeStart;
