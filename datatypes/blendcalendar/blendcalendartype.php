@@ -205,16 +205,17 @@ class BlendCalendarType extends eZDataType
         
         if(!$allDay)
         {
+            $referenceTime = mktime( 0, 0, 0 );
             $startTime = strtotime($timeStart);
             
             //Convert to seconds since midnight
-            $startTime = $startTime % 86400;
+            $startTime = ($startTime - $referenceTime) % 86400;
             
             if($timeEnd)
             {
                 $endTime = strtotime($timeEnd);
                 
-                $endTime = $endTime % 86400;
+                $endTime = ($endTime - $referenceTime)% 86400;
 
                 if($endTime < $startTime) //Assume the end time is on the next day if it's less than start (eg 11pm - 2am)
                 {
@@ -372,7 +373,12 @@ class BlendCalendarType extends eZDataType
         $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode, false, true);
         if ( !$eventObj )
         {
-            $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode, false);
+            $fetchLanguageCode = $languageCode;
+            if ( $objectAttribute->attribute( 'can_translate' ) == '0' )
+            {
+                $fetchLanguageCode = $objectAttribute->attribute( 'object' )->attribute( 'initial_language_code' );
+            }
+            $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $fetchLanguageCode, false);
             if ( $eventObj )
             {
                 $eventObj->version = $version;

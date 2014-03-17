@@ -382,9 +382,10 @@ class CalendarEvent
         {
             $locale = eZLocale::instance();
             $hourFormat = eZLocale::transformToPHPFormat( $locale->ShortTimeFormat, array( 'g', 'i', 'a', 'H', 'h' ) );
+            $referenceTime = mktime( 0, 0, 0 );
             $fields['object']=$this->contentObject;
-            $fields['start_time_local']=date($hourFormat,$this->startTime);
-            $fields['end_time_local']=date($hourFormat,$this->startTime + $this->duration);
+            $fields['start_time_local']=date($hourFormat,$this->startTime + $referenceTime);
+            $fields['end_time_local']=date($hourFormat,$this->startTime + $this->duration + $referenceTime);
             $fields['all_day']=$this->startTime ? false : true;
 
         }
