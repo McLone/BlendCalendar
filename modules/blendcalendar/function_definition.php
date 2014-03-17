@@ -35,7 +35,11 @@ $FunctionList['range'] = array( 'name' => 'range',
                                                                 array( 'name' => 'group_by',
                                                                        'type' => 'string',
                                                                        'required' => false,
-                                                                       'default' => 'linear' )
+                                                                       'default' => 'linear' ),
+                                                                array( 'name' => 'language_code',
+                                                                       'type' => 'string',
+                                                                       'required' => false,
+                                                                       'default' => '' )
 															);
 
 ?>

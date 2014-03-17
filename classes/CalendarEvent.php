@@ -2,11 +2,13 @@
 
 class CalendarEvent
 {
-    public $contentObjectAttributeId;
+    public $contentClassAttributeId;
 
     public $contentObjectId;
     
     public $version;
+
+    public $languageCode;
     
     public $contentObject;
     
@@ -23,27 +25,27 @@ class CalendarEvent
     const FETCH_DAYS = 4;
     
     //Return a populated CalendarEvent object based on an oa id.
-    public static function load($contentObjectAttributeId, $version=null, $addObject = true)
+    public static function load($contentObjectId, $contentClassAttributeId, $version, $languageCode, $addObject = true, $strict = false)
     {
         $db = eZDB::instance();
         
-        if($version)
-        {
-            $sql = "SELECT * FROM BlendEvent WHERE ezcontentobjectattribute_id=" . intval($contentObjectAttributeId) . " AND version=" . intval($version);
-        }
-        else
-        {
-            $sql = "SELECT * FROM BlendEvent WHERE ezcontentobjectattribute_id=" . intval($contentObjectAttributeId) . " order by version DESC";            
-        }
+        $sql = "SELECT * FROM BlendEvent WHERE contentobject_id=" . intval($contentObjectId) . " AND contentclassattribute_id=" . intval($contentClassAttributeId) . " AND version=" . intval($version) . " AND language_code='" . $db->escapeString( $languageCode ) . "'";
         //echo "[[$sql]]";
         $rows = $db->arrayQuery($sql);
-        
-        if(!$rows && $version)
+
+        if(!$rows && !$strict)
         {
-            $sql = "SELECT * FROM BlendEvent WHERE ezcontentobjectattribute_id=" . intval($contentObjectAttributeId) . " order by version DESC";            
+            $sql = "SELECT * FROM BlendEvent WHERE contentobject_id=" . intval($contentObjectId) . " AND contentclassattribute_id=" . intval($contentClassAttributeId) . " AND language_code='" . $db->escapeString( $languageCode ) . "' order by version DESC";
             //echo "[[$sql]]";
 
-            $rows = $db->arrayQuery($sql);    
+            $rows = $db->arrayQuery($sql);
+            if ( !$rows )
+            {
+                $sql = "SELECT * FROM BlendEvent WHERE contentobject_id=" . intval($contentObjectId) . " AND contentclassattribute_id=" . intval($contentClassAttributeId) . " order by version DESC";
+                //echo "[[$sql]]";
+
+                $rows = $db->arrayQuery($sql);
+            }
         }
         
         if(!$rows)
@@ -55,30 +57,42 @@ class CalendarEvent
 
     }
        
-    public static function destroy($contentObjectAttributeId, $version)
+    public static function destroy($contentObjectId, $contentClassAttributeId, $version = null)
     {
         $db = eZDB::instance();
-        
-        $sql = "DELETE FROM BlendEvent WHERE ezcontentobjectattribute_id=" . intval($contentObjectAttributeId) . " AND version = " . intval($version);
-        
-        $rows = $db->query($sql);
+
+        if ( !$version )
+        {
+            $sql = "DELETE FROM BlendEvent WHERE contentobject_id=" . intval($contentObjectId) . " AND contentclassattribute_id=" . intval($contentClassAttributeId);
+        }
+        else
+        {
+            $sql = "DELETE FROM BlendEvent WHERE contentobject_id=" . intval($contentObjectId) . " AND contentclassattribute_id=" . intval($contentClassAttributeId) . " AND version = " . intval($version);
+        }
+
+        $db->query($sql);
 
     }
     
     //Return an array of CalendarEvent objects that occur within a given range.
     //$startDate and $endDate are unix timestamps
-    public static function getEventsInRange($contentClassAttributeIds, $startDate, $endDate, $filters = false, $parentNodeId=false, $subTree = false, $fetchType = self::FETCH_DAYS)
+    public static function getEventsInRange($contentClassAttributeIds, $startDate, $endDate, $filters = false, $parentNodeId=false, $subTree = false, $fetchType = self::FETCH_DAYS, $languageCode = false)
     {
     
         //echo "<pre>SD:". $startDate . '=' . date('Y-m-d H:i', $startDate); echo "</pre>";
         //echo "REM: " . ($startDate % CalendarRecurrence::DAY);
         //Sanitize the inputs to inclusive days
         //$startDate = $startDate - ($startDate % CalendarRecurrence::DAY);
-        
+
         $endDate = $endDate - ($endDate % CalendarRecurrence::DAY);
-    
+
+        if ( !$languageCode )
+        {
+            $languageCode = eZINI::instance()->variable( 'RegionalSettings', 'ContentObjectLocale' );
+        }
+
         //Get all events in the range
-        $events = self::getUnfilteredRange($contentClassAttributeIds, $startDate, $endDate, $parentNodeId, $subTree);
+        $events = self::getUnfilteredRange($contentClassAttributeIds, $startDate, $endDate, $parentNodeId, $subTree, $languageCode);
         $days = array();
     
         //Check each day in the range
@@ -131,7 +145,7 @@ class CalendarEvent
     }
 
     //Return a list of CalendarEvent objects within a range, but return them all instead of examining calendar rules.
-    protected static function getUnfilteredRange($contentClassAttributeIds, $startDate, $endDate, $parentNodeId = false, $subTree = false)
+    protected static function getUnfilteredRange($contentClassAttributeIds, $startDate, $endDate, $parentNodeId = false, $subTree = false, $languageCode = false)
     {
         $db = eZDB::instance();
         
@@ -148,6 +162,13 @@ class CalendarEvent
         foreach($contentClassAttributeIds as $id) {
         	$cleanIds[] = intval($id);
         }
+
+        if ( !$languageCode )
+        {
+            $languageCode = eZINI::instance()->variable( 'RegionalSettings', 'ContentObjectLocale' );
+        }
+
+        $languageCodeCleaned = $db->escapeString( $languageCode );
         
         
         $fields = "*";
@@ -164,15 +185,9 @@ class CalendarEvent
         
         $where .= ")";        
         
-
-        //ContentClassAttribute
-        $from .= " INNER JOIN ezcontentobject_attribute a on (a.id = e.ezcontentobjectattribute_id AND a.version = e.version)";
-        $from .= " INNER JOIN ezcontentobject_version v on (a.contentobject_id = v.contentobject_id AND a.version = v.version)";
-        $from .= " INNER JOIN ezcontentobject o on (a.contentobject_id = o.id)";
-        //$from .= " INNER JOIN ezcontentclass c on (o.contentclass_id = c.id)";
-        $where .= " AND a.contentclassattribute_id IN (" . implode(',',$cleanIds) . ")";
-        $where .= " AND v.status = " . eZContentObject::STATUS_PUBLISHED;
-        $from .= " INNER JOIN ezcontentobject_tree n on (n.contentobject_id = o.id AND n.contentobject_version = v.version)";
+        $from .= " INNER JOIN ezcontentobject o on (e.contentobject_id = o.id AND e.version = o.current_version)";
+        $from .= " INNER JOIN ezcontentobject_tree n on n.contentobject_id = o.id";
+        $where .= " AND e.contentclassattribute_id IN (" . implode(',',$cleanIds) . ") AND e.language_code = '$languageCodeCleaned'";
 
         if($parentNodeId)
         {
@@ -192,7 +207,7 @@ class CalendarEvent
         
         $objs = array();
 
-        $sql = "SELECT $fields FROM $from WHERE $where $order"; 
+        $sql = "SELECT $fields FROM $from WHERE $where $order";
 //echo "[$sql]";
         $rows = $db->arrayQuery($sql);
 
@@ -217,9 +232,11 @@ class CalendarEvent
         $recur = CalendarRecurrence::createFromRow($row);
         $ev = new CalendarEvent($row['start_time'], $row['duration'], $recur);
         
-        $ev->contentObjectAttributeId = $row['ezcontentobjectattribute_id'];
+        $ev->contentObjectId = $row['contentobject_id'];
+        $ev->contentClassAttributeId = $row['contentclassattribute_id'];
         $ev->version = $row['version'];
-        
+        $ev->languageCode = $row['language_code'];
+
         if($addObject && array_key_exists('contentobject_id', $row))
         {
             $ev->contentObjectId = $row['contentobject_id'];
@@ -338,7 +355,10 @@ class CalendarEvent
         
         $fields = $this->toArray(false);
 
-        $sql = "REPLACE INTO BlendEvent (`" . implode('`,`',array_keys($fields)) . "`) VALUES (" . implode(', ', array_values($fields)) . ")";
+        $languageCode = $fields['language_code'];
+        unset( $fields['language_code'] );
+
+        $sql = "REPLACE INTO BlendEvent (`language_code`,`" . implode('`,`',array_keys($fields)) . "`) VALUES ('" . $languageCode . "'," . implode(', ', array_values($fields)) . ")";
         
         //echo "[[$sql]]";
         $db->query($sql);
@@ -348,8 +368,10 @@ class CalendarEvent
     public function toArray($display = true)
     {
         $fields = array(
-            'ezcontentobjectattribute_id'=>intval($this->contentObjectAttributeId),
+            'contentobject_id'=>intval($this->contentObjectId),
+            'contentclassattribute_id'=>intval($this->contentClassAttributeId),
             'version'=>intval($this->version),
+            'language_code'=>$this->languageCode,
             'start_time'=>intval($this->startTime),
             'duration'=>intval($this->duration)
             );
@@ -360,7 +382,6 @@ class CalendarEvent
         {
             $locale = eZLocale::instance();
             $hourFormat = eZLocale::transformToPHPFormat( $locale->ShortTimeFormat, array( 'g', 'i', 'a', 'H', 'h' ) );
-            $fields['contentobject_id']=$this->contentObjectId;
             $fields['object']=$this->contentObject;
             $fields['start_time_local']=date($hourFormat,$this->startTime);
             $fields['end_time_local']=date($hourFormat,$this->startTime + $this->duration);

@@ -166,7 +166,10 @@ class BlendCalendarType extends eZDataType
     {
 
         $id = $contentObjectAttribute->attribute( 'id' );
+        $contentObjectId = $contentObjectAttribute->attribute( 'contentobject_id' );
+        $contentClassAttributeId = $contentObjectAttribute->attribute( 'contentclassattribute_id' );
         $version = $contentObjectAttribute->attribute('version');
+        $languageCode = $contentObjectAttribute->attribute('language_code');
         
         $recurType = $http->postVariable($base . '_recurtype_' . $id);
         $singleDate = $http->postVariable($base . '_singledate_' . $id);
@@ -298,13 +301,15 @@ class BlendCalendarType extends eZDataType
         }
         
         
-        $event = CalendarEvent::load($id, $version);
+        $event = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode);
 
         if(!$event)
         {
             $event = new CalendarEvent($startTime, $duration, $recur);
-            $event->contentObjectAttributeId = $id;
+            $event->contentObjectId = $contentObjectId;
+            $event->contentClassAttributeId = $contentClassAttributeId;
             $event->version = $version;
+            $event->languageCode = $languageCode;
         }
         else
         {
@@ -312,6 +317,7 @@ class BlendCalendarType extends eZDataType
             $event->duration = $duration;
             $event->recurrence = $recur;
             $event->version = $version;
+            $event->languageCode = $languageCode;
         }
         
         //echo "<pre>"; var_dump($event); echo "</pre>";
@@ -326,10 +332,12 @@ class BlendCalendarType extends eZDataType
     */
     function objectAttributeContent( $contentObjectAttribute )
     {
-        $id = $contentObjectAttribute->attribute( "id" );
+        $contentObjectId = $contentObjectAttribute->attribute( "contentobject_id" );
+        $contentClassAttributeId = $contentObjectAttribute->attribute( "contentclassattribute_id" );
         $version = $contentObjectAttribute->attribute( "version" );
+        $languageCode = $contentObjectAttribute->attribute( "language_code" );
 
-        $eventObj = CalendarEvent::load($id, $version, false);
+        $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode, false);
         
         if(!$eventObj)
         {
@@ -345,17 +353,42 @@ class BlendCalendarType extends eZDataType
         
     }
 
+    /*!
+     Stores the datatype data to the database which is related to the
+     object attribute.
+     \return True if the value was stored correctly.
+     \note The method is entirely up to the datatype, for instance
+           it could reuse the available types in the the attribute or
+           store in a separate object.
+     \sa fetchObjectAttributeHTTPInput
+    */
+    function storeObjectAttribute( $objectAttribute )
+    {
+        $contentObjectId = $objectAttribute->attribute('contentobject_id');
+        $contentClassAttributeId = $objectAttribute->attribute('contentclassattribute_id');
+        $version = $objectAttribute->attribute('version');
+        $languageCode = $objectAttribute->attribute('language_code');
+
+        $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode, false, true);
+        if ( !$eventObj )
+        {
+            $eventObj = CalendarEvent::load($contentObjectId, $contentClassAttributeId, $version, $languageCode, false);
+            if ( $eventObj )
+            {
+                $eventObj->version = $version;
+                $eventObj->languageCode = $languageCode;
+
+                $eventObj->save();
+            }
+        }
+    }
+
     function deleteStoredObjectAttribute( $contentObjectAttribute, $version = null )
     {
-        if($version == null)
-        {
-            $id = $contentObjectAttribute->attribute( "id" );
-            
-            $event = CalendarEvent::destroy($id, $version);
-            
-            
-        }
-    }    
+        $contentObjectId = $contentObjectAttribute->attribute('contentobject_id');
+        $contentClassAttributeId = $contentObjectAttribute->attribute('contentclassattribute_id');
+        CalendarEvent::destroy($contentObjectId, $contentClassAttributeId, $version);
+    }
 
     /*!
      Returns the meta data used for storing search indeces.

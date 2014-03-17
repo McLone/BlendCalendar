@@ -6,3 +6,6 @@ AJAX-based calendar control, and some supporting components.
 
 TO INSTALL:
 see doc/INSTALL
+
+WARNING : this branch has a different data structure from the orignal branch
+(blendinteractive) : upgrade with caution ! (you'd better compare shema.sql first !)

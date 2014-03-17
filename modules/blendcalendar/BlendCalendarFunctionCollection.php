@@ -3,7 +3,7 @@
 class BlendCalendarFunctionCollection
 {
 
-    function getRange($contentClassAttributeId, $startTime, $endTime, $filters = array(), $parentNodeId=false, $subTree=false, $groupBy=false)
+    function getRange($contentClassAttributeId, $startTime, $endTime, $filters = array(), $parentNodeId=false, $subTree=false, $groupBy=false, $languageCode=false)
     {
         //echo "S: $startTime - E: $endTime";
         if($startTime && !is_numeric($startTime))
@@ -19,7 +19,12 @@ class BlendCalendarFunctionCollection
         {
             $endTime = strtotime(date('n/t/Y', $startTime)); //End of the current month
         }
-        
+
+        if ( !$languageCode )
+        {
+            $languageCode = eZINI::instance()->variable( 'RegionalSettings', 'ContentObjectLocale' );
+        }
+
         $resultType = CalendarEvent::FETCH_DAYS;
         
         if ($groupBy == 'day') {
@@ -33,7 +38,8 @@ class BlendCalendarFunctionCollection
         	$filters, 
         	$parentNodeId, 
         	$subTree, 
-        	$resultType
+        	$resultType,
+            $languageCode
 		);
         
         return array('result'=>$events);
