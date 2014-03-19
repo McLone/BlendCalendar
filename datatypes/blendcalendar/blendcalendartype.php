@@ -420,6 +420,15 @@ class BlendCalendarType extends eZDataType
         return true;
     }
 
+    /*!
+     \return \c true if the datatype finds any content in the attribute \a $contentObjectAttribute.
+    */
+    function hasObjectAttributeContent( $contentObjectAttribute )
+    {
+        return true; //Actully, there's no case where there's no content
+    }
+
+
 }
 
 eZDataType::register( BlendCalendarType::DATA_TYPE_STRING, "BlendCalendarType" );
