@@ -31,15 +31,14 @@ $FunctionList['range'] = array( 'name' => 'range',
                                                                        'type' => 'integer',
                                                                        'required' => false,
                                                                        'default' => null ),                                                                                                                                              
-                                                                        ),
                                                                 array( 'name' => 'group_by',
                                                                        'type' => 'string',
                                                                        'required' => false,
-                                                                       'default' => 'linear' ),
+                                                                       'default' => 'day' ),
                                                                 array( 'name' => 'language_code',
                                                                        'type' => 'string',
                                                                        'required' => false,
                                                                        'default' => '' )
-															);
+															) );
 
 ?>

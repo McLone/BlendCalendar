@@ -94,7 +94,7 @@ class CalendarEvent
         //Get all events in the range
         $events = self::getUnfilteredRange($contentClassAttributeIds, $startDate, $endDate, $parentNodeId, $subTree, $languageCode);
         $days = array();
-    
+
         //Check each day in the range
         for($day = $startDate; $day < $endDate; $day+=CalendarRecurrence::DAY)
         {

@@ -27,8 +27,8 @@ class BlendCalendarFunctionCollection
 
         $resultType = CalendarEvent::FETCH_DAYS;
         
-        if ($groupBy == 'day') {
-        	$resultType = CalendarEvent::FETCH_DAYS;
+        if ($groupBy == 'linear') {
+        	$resultType = CalendarEvent::FETCH_LINEAR;
         }
 
         $events = CalendarEvent::getEventsInRange(
@@ -41,7 +41,6 @@ class BlendCalendarFunctionCollection
         	$resultType,
             $languageCode
 		);
-        
         return array('result'=>$events);
     }
 
