@@ -53,8 +53,11 @@ class CalendarWeeklyRecurrence extends CalendarRecurrence
         {
             //How many weeks has it been since the start date?
             $week = self::DAY * 7;
-            $startWeek = floor($this->rangeStart / $week);
-            $thisWeek = floor($date / $week);
+            //Make the first day of week to be the first day of recurrence :
+            //TODO I can't actually explain why the "+ 1" do the trick, but it does for me... may be some timezone issue to fix ?
+            $dayWeekOffset = (date('w', 0) - date('w', $this->rangeStart) + 1) * self::DAY;
+            $startWeek = floor(($this->rangeStart + $dayWeekOffset) / $week);
+            $thisWeek = floor(($date + $dayWeekOffset) / $week);
             
             $intervalWeek = ($thisWeek - $startWeek) % $this->interval;
             
