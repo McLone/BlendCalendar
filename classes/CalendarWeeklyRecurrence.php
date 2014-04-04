@@ -53,9 +53,19 @@ class CalendarWeeklyRecurrence extends CalendarRecurrence
         {
             //How many weeks has it been since the start date?
             $week = self::DAY * 7;
+
+            if ( eZINI::instance()->hasVariable('BlendCalendarSettings', 'ForceStartDayOfWeekForIntervaledRecurrence') )
+            {
+                $firstDayOfWeek =  eZINI::instance()->variable('BlendCalendarSettings', 'ForceStartDayOfWeekForIntervaledRecurrence');
+            }
+            else
+            {
+                $firstDayOfWeek = date('w', $this->rangeStart);
+            }
+
             //Make the first day of week to be the first day of recurrence :
             //TODO I can't actually explain why the "+ 1" do the trick, but it does for me... may be some timezone issue to fix ?
-            $dayWeekOffset = (date('w', 0) - date('w', $this->rangeStart) + 1) * self::DAY;
+            $dayWeekOffset = (date('w', 0) - $firstDayOfWeek + 1) * self::DAY;
             $startWeek = floor(($this->rangeStart + $dayWeekOffset) / $week);
             $thisWeek = floor(($date + $dayWeekOffset) / $week);
             
