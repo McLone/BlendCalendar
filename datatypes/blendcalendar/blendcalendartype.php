@@ -259,6 +259,10 @@ class BlendCalendarType extends eZDataType
         {
             $rangeEnd = null;
         }
+        else
+        {
+            $rangeEnd = strtotime( $rangeEnd );
+        }
 
         switch ($recurType)
         {
