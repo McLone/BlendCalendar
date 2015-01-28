@@ -42,7 +42,7 @@
                                                                                                                                                                        '%end_time%', sum( $attribute.content.start_time, $attribute.content.range_start, $attribute.content.duration )|l10n( 'shorttime' ),
                                                                                                                                                                        '%start_date%', sum( $attribute.content.start_time, $attribute.content.range_start )|l10n( 'shortdate' ) ) )}
     {if $attribute.content.range_end}
-        {'to %end_date%'|i18n( 'blendcalendar', 'from %date% to %end_date% : Do not translate %end_date%', hash( '%end_date%', $attribute.content.range_start|l10n( 'shortdate' ) ) )}
+        {'to %end_date%'|i18n( 'blendcalendar', 'from %date% to %end_date% : Do not translate %end_date%', hash( '%end_date%', $attribute.content.range_end|l10n( 'shortdate' ) ) )}
     {/if}
     {if $attribute.content.interval|gt( 1 )}
         (1 {'week'|i18n( 'blendcalendar' )} / {$attribute.content.interval})
